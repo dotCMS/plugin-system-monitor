@@ -1,0 +1,50 @@
+plugins {
+
+    id "org.jruyi.osgibnd" version "0.5.0"
+}
+
+
+sourceCompatibility = '1.8'
+version = '0.1'
+
+repositories {
+    mavenCentral()
+    maven { url "http://repo.dotcms.com/artifactory/libs-release" }
+    maven { url "http://repo.dotcms.com/artifactory/libs-snapshot-local" }
+}
+
+configurations {
+    pluginLibs
+    osgiLibs
+}
+
+dependencies {
+    compile ('com.dotcms:dotcms:4.1.0'){ transitive = true }
+    //Resolve dependencies. These jars can be downloaded from our Maven Repo
+    //In case you want to create a Controller using other Spring version,
+    //just change the version Attribute.
+	//pluginLibs group: 'org.springframework', name: 'spring-webmvc', version: '4.3.9.RELEASE'
+	compile 'net.jodah:failsafe:1.0.4'
+
+
+    
+}
+
+jar {
+    manifest {
+        attributes (
+            'Bundle-Activator': 'com.dotcms.plugin.rest.monitor.Activator',
+            'Export-Package' : 'net.jodah.failsafe.*',
+            'Import-Package': '''
+				com.dotmarketing.business.*
+				com.dotmarketing.db.*,
+        	''',
+        	'DynamicImport-Package' :  '*',
+
+        )
+    }
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '4.0.2'
+}
