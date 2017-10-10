@@ -6,6 +6,13 @@ https://github.com/dotCMS/plugin-system-monitor/blob/master/src/main/java/com/do
 
 and recompiling.
 
+to build the plugin, 
+
+```
+./gradlew jar
+```
+
+
 
 ```
 hot-fries:com.dotcms.plugin.rest.monitor will$ curl http://localhost:8080/api/v1/system-status
