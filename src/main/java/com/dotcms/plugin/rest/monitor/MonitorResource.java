@@ -109,8 +109,13 @@ public class MonitorResource {
 				.with(breaker())
 				.withFallback(Boolean.FALSE)
 				.get(failFastPolicy(DB_TIMEOUT, () -> { 
-					return APILocator.getContentletAPI().contentletCount() > 0;
-
+					
+					try{
+						return APILocator.getContentletAPI().contentletCount() > 0;
+					}
+					finally{
+						DbConnectionFactory.closeSilently();
+					}
 				}));
 
 	}
@@ -122,12 +127,16 @@ public class MonitorResource {
 			.with(breaker())
 			.withFallback(Boolean.FALSE)
 			.get(failFastPolicy(INDEX_TIMEOUT, () -> { 
-				Client client=new ESClient().getClient();
-				CountResponse response = client.prepareCount(idx)
-				        .setQuery(QueryBuilders.termQuery("_type", "content"))
-				        .execute()
-				        .actionGet();
-				return response.getCount()> 0;
+				try{
+					Client client=new ESClient().getClient();
+					CountResponse response = client.prepareCount(idx)
+					        .setQuery(QueryBuilders.termQuery("_type", "content"))
+					        .execute()
+					        .actionGet();
+					return response.getCount()> 0;
+				}finally{
+					DbConnectionFactory.closeSilently();
+				}
 			}));
 	}
 	
@@ -138,12 +147,16 @@ public class MonitorResource {
 			.with(breaker())
 			.withFallback(Boolean.FALSE)
 			.get(failFastPolicy(CACHE_TIMEOUT, () -> { 
-				Identifier id =  APILocator.getIdentifierAPI().loadFromCache(Host.SYSTEM_HOST);
-				if(id==null || !UtilMethods.isSet(id.getId())){
-					 id =  APILocator.getIdentifierAPI().find(Host.SYSTEM_HOST);
-					 id =  APILocator.getIdentifierAPI().loadFromCache(Host.SYSTEM_HOST);
+				try{
+					Identifier id =  APILocator.getIdentifierAPI().loadFromCache(Host.SYSTEM_HOST);
+					if(id==null || !UtilMethods.isSet(id.getId())){
+						 id =  APILocator.getIdentifierAPI().find(Host.SYSTEM_HOST);
+						 id =  APILocator.getIdentifierAPI().loadFromCache(Host.SYSTEM_HOST);
+					}
+					return id!=null && UtilMethods.isSet(id.getId());
+				}finally{
+					DbConnectionFactory.closeSilently();
 				}
-				return id!=null && UtilMethods.isSet(id.getId());
 			}));
 
 	}
