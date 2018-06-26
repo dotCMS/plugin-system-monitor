@@ -13,7 +13,6 @@ import java.util.concurrent.TimeoutException;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.elasticsearch.action.count.CountResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.QueryBuilders;
 
@@ -28,6 +27,7 @@ import com.dotcms.repackage.javax.ws.rs.core.MediaType;
 import com.dotcms.repackage.javax.ws.rs.core.Response;
 import com.dotcms.repackage.javax.ws.rs.core.Response.ResponseBuilder;
 import com.dotcms.repackage.org.glassfish.jersey.server.JSONP;
+import com.dotcms.rest.InitDataObject;
 import com.dotcms.rest.WebResource;
 import com.dotcms.rest.annotation.NoCache;
 import com.dotmarketing.beans.Host;
@@ -126,18 +126,22 @@ public class MonitorResource {
 		return Failsafe
 			.with(breaker())
 			.withFallback(Boolean.FALSE)
-			.get(failFastPolicy(INDEX_TIMEOUT, () -> { 
+			.get(failFastPolicy(INDEX_TIMEOUT, () -> {
 				try{
 					Client client=new ESClient().getClient();
-					CountResponse response = client.prepareCount(idx)
-					        .setQuery(QueryBuilders.termQuery("_type", "content"))
-					        .execute()
-					        .actionGet();
-					return response.getCount()> 0;
+					long totalHits = client.prepareSearch(idx)
+						.setQuery(QueryBuilders.termQuery("_type", "content"))
+						.setSize(0)
+						.execute()
+						.actionGet()
+						.getHits()
+						.getTotalHits();
+					System.out.println("totalHits=" + totalHits);
+					return totalHits > 0;
 				}finally{
 					DbConnectionFactory.closeSilently();
 				}
-			}));
+		}));
 	}
 	
 	private boolean cache() throws Throwable {
