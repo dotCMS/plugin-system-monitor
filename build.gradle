@@ -11,8 +11,8 @@ repositories {
 
 dependencies {
     //compile ('com.dotcms:dotcms:4.1.0'){ transitive = true }
-    compile files('/Users/brent/dotcms/repos/5.0.0.b/core/dotCMS/build/libs/dotcms_5.0.0_586feb2.jar')
-    compile fileTree(dir: '/Users/brent/dotcms/repos/5.0.0.b/core/dotCMS/build/pluginsLib', include: '*.jar')
+    compileOnly files('/Users/brent/dotcms/repos/5.0.0.b/core/dotCMS/build/libs/dotcms_5.0.0_586feb2.jar')
+    compileOnly fileTree(dir: '/Users/brent/dotcms/repos/5.0.0.b/core/dotCMS/build/pluginsLib', include: '*.jar')
     compile 'net.jodah:failsafe:1.0.4'    
 }
 
@@ -30,6 +30,9 @@ jar {
                 'Bundle-Activator': 'com.dotcms.plugin.rest.monitor.Activator',
                 'Import-Package': '*;version=0'
         )
+    }
+    from {
+        configurations.compile.collect {it.isDirectory() ? it : zipTree(it)}
     }
 }
 jar.finalizedBy 'fragmentJar'
